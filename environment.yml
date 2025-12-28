@@ -1,0 +1,30 @@
+name: car_license_plate_recognition
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+
+  # Core scientific stack
+  - numpy
+  - pandas
+  - matplotlib
+  - pillow
+  - opencv
+
+  # PyTorch (CPU version by default)
+  - pytorch
+  - torchvision
+  - torchaudio
+
+  # Utilities
+  - tqdm
+  - pyyaml
+  - requests
+
+  # Pip packages
+  - pip
+  - pip:
+      - ultralytics
+      - easyocr
+      - filterpy

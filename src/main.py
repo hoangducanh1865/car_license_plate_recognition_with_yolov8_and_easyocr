@@ -12,7 +12,7 @@ from src.processing.interpolator import BoundingBoxInterpolator
 from src.visualization.video_visualizer import VideoVisualizer
 
 
-def main(max_frames=None, use_kaggle=0):
+def main(args):
     """
     Process video to detect vehicles and license plates.
 
@@ -20,15 +20,16 @@ def main(max_frames=None, use_kaggle=0):
         max_frames (int, optional): Maximum number of frames to process.
                                     If None, processes all frames.
     """
-    # Paths
-    video_path = (
-        os.path.join("..", "..", "input", "sample", "sample.mp4")
-        if use_kaggle
-        else os.path.join("data", "sample.mp4")
-    )
-    output_csv = os.path.join("results", "test.csv")
-    interpolated_csv = os.path.join("results", "test_interpolated.csv")
-    output_video = os.path.join("results", "out.mp4")
+    
+    max_frames=args.max_frames
+    use_kaggle=args.use_kaggle
+    video_path = args.video_path
+    output_video_path = args.output_video_path
+    output_csv_path = args.output_csv_path
+    interpolated_csv_path = args.interpolated_csv_path
+    
+    if use_kaggle:
+        video_path = os.path.join("kaggle/input/lpr_dataset",)
 
     # Set device based on use_kaggle (GPU on Kaggle, CPU locally)
     device = "cuda" if use_kaggle else "cpu"
@@ -121,20 +122,20 @@ def main(max_frames=None, use_kaggle=0):
 
     # Write results to CSV
     print("Writing results to CSV...")
-    ResultsWriter.write(results, output_csv)
-    print(f"Results saved to: {output_csv}\n")
+    ResultsWriter.write(results, output_csv_path)
+    print(f"Results saved to: {output_csv_path}\n")
 
     # Interpolate missing data
     print("Interpolating missing data...")
     interpolator = BoundingBoxInterpolator()
-    interpolator.interpolate_csv(output_csv, interpolated_csv)
-    print(f"Interpolated results saved to: {interpolated_csv}\n")
+    interpolator.interpolate_csv(output_csv_path, interpolated_csv_path)
+    print(f"Interpolated results saved to: {interpolated_csv_path}\n")
 
     # Create visualization video
     print("Creating visualization video...")
     visualizer = VideoVisualizer()
-    visualizer.visualize(interpolated_csv, video_path, output_video)
-    print(f"Output video saved to: {output_video}\n")
+    visualizer.visualize(interpolated_csv_path, video_path, output_video_path)
+    print(f"Output video saved to: {output_video_path}\n")
 
     print("Processing complete!")
 
@@ -153,6 +154,30 @@ if __name__ == "__main__":
         default=0,
         help="Use Kaggle paths (1) or local paths (0) (default: 0)",
     )
+    parser.add_argument(
+        "--video_path",
+        type=str,
+        default=os.path.join("data", "test_videos", "test_1.mp4"),
+        help="Path to test video",
+    )
+    parser.add_argument(
+        "--output_video_path",
+        type=str,
+        default=os.path.join("results","test_video_outputs", "test_i_output.mp4"),
+        help="",
+    )
+    parser.add_argument(
+        "--output_csv_path",
+        type=str,
+        default=os.path.join("results", "test.csv"),
+        help=")",
+    )
+    parser.add_argument(
+        "--interpolated_csv_path",
+        type=str,
+        default=os.path.join("results", "test_interpolated.csv"),
+        help="",
+    )
 
     args = parser.parse_args()
-    main(max_frames=args.max_frames, use_kaggle=args.use_kaggle)
+    main(args=args)

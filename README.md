@@ -1,1 +1,1 @@
-# car_license_plate_recognition_with_yolov8_and_easyocr
+# Car License Plate Recognition With YOLOv8 And EasyOCR

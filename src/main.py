@@ -20,16 +20,16 @@ def main(args):
         max_frames (int, optional): Maximum number of frames to process.
                                     If None, processes all frames.
     """
-    
-    max_frames=args.max_frames
-    use_kaggle=args.use_kaggle
+
+    max_frames = args.max_frames
+    use_kaggle = args.use_kaggle
     video_path = args.video_path
     output_video_path = args.output_video_path
     output_csv_path = args.output_csv_path
     interpolated_csv_path = args.interpolated_csv_path
-    
+
     if use_kaggle:
-        video_path = os.path.join("kaggle/input/lpr_dataset",)
+        video_path = os.path.join("../../input/lpr-dataset", video_path)
 
     # Set device based on use_kaggle (GPU on Kaggle, CPU locally)
     device = "cuda" if use_kaggle else "cpu"
@@ -91,12 +91,21 @@ def main(args):
             if crop.size == 0:
                 continue
 
-            # Optional: preprocess the crop
+            # Preprocess the crop for better OCR
             gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, 64, 255, cv2.THRESH_BINARY_INV)
+            # Use adaptive thresholding for better results with varying lighting
+            processed = cv2.adaptiveThreshold(
+                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+            )
 
-            # Read license plate text
-            text, text_score = reader.read(thresh)
+            # Try reading from processed image first, then fall back to original crop
+            text, text_score = reader.read(processed)
+            if text is None:
+                # Fall back to original grayscale if adaptive threshold fails
+                text, text_score = reader.read(gray)
+            if text is None:
+                # Final fallback: try original color crop
+                text, text_score = reader.read(crop)
             if text is None:
                 continue
 
@@ -157,13 +166,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--video_path",
         type=str,
-        default=os.path.join("data", "test_videos", "test_1.mp4"),
+        default=os.path.join("data", "test_videos", "test_2.mp4"),
         help="Path to test video",
     )
     parser.add_argument(
         "--output_video_path",
         type=str,
-        default=os.path.join("results","test_video_outputs", "test_i_output.mp4"),
+        default=os.path.join("results", "test_video_outputs", "test_i_output.mp4"),
         help="",
     )
     parser.add_argument(
